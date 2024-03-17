@@ -38,6 +38,15 @@ type Matches struct {
 	Matches []Match `json:"matches"`
 }
 
+// Add a String method to the Matches struct
+func (m Matches) String() string {
+	var str string
+	for _, match := range m.Matches {
+		str += match.String() + "\n"
+	}
+	return str
+}
+
 func main() {
 	// Get data from schleising.net/football/api/
 	resp, err := http.Get("https://www.schleising.net/football/api/")
@@ -76,9 +85,7 @@ func main() {
 	// Print the matches from the API
 	fmt.Println("")
 	fmt.Println(("Matches from the API"))
-	for _, match := range matches.Matches {
-		fmt.Println(match)
-	}
+	fmt.Println(matches)
 
 	// Marshall the matches back to JSON and save it to a file
 	matchesJSON, err := json.MarshalIndent(matches, "", "  ")
@@ -123,7 +130,5 @@ func main() {
 	// Print the matches from the file
 	fmt.Println("")
 	fmt.Println(("Matches from the file"))
-	for _, match := range matchesFromFile.Matches {
-		fmt.Println(match)
-	}
+	fmt.Println(matchesFromFile)
 }
