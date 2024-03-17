@@ -9,12 +9,12 @@ import (
 )
 
 type Match struct {
-	Status string `json:"status"`
-	StartTime time.Time `json:"start_time_iso"`
-	HomeTeam string `json:"home_team"`
-	HomeTeamScore int `json:"home_team_score"`
-	AwayTeam string `json:"away_team"`
-	AwayTeamScore int `json:"away_team_score"`
+	Status        string    `json:"status"`
+	StartTime     time.Time `json:"start_time_iso"`
+	HomeTeam      string    `json:"home_team"`
+	HomeTeamScore int       `json:"home_team_score"`
+	AwayTeam      string    `json:"away_team"`
+	AwayTeamScore int       `json:"away_team_score"`
 }
 
 type Matches struct {
