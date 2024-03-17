@@ -91,7 +91,7 @@ func main() {
 	}
 
 	// Print the matches from the API
-	fmt.Println("")
+	fmt.Println()
 	fmt.Println(("Matches from the API"))
 	fmt.Println(matches)
 
@@ -136,7 +136,7 @@ func main() {
 	}
 
 	// Print the matches from the file
-	fmt.Println("")
+	fmt.Println()
 	fmt.Println(("Matches from the file"))
 	fmt.Println(matchesFromFile)
 }
