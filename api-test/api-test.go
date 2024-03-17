@@ -10,6 +10,7 @@ import (
 	"time"
 )
 
+// Create a Match struct
 type Match struct {
 	Status        string    `json:"status"`
 	StartTime     time.Time `json:"start_time_iso"`
@@ -19,6 +20,20 @@ type Match struct {
 	AwayTeamScore int       `json:"away_team_score"`
 }
 
+// Add a String method to the Match struct
+func (m Match) String() string {
+	return fmt.Sprintf(
+		"%s - %-15s %2d - %-2d %-15s %-12s",
+		m.StartTime.Local().Format(time.RFC1123),
+		m.HomeTeam,
+		m.HomeTeamScore,
+		m.AwayTeamScore,
+		m.AwayTeam,
+		m.Status,
+	)
+}
+
+// Create a Matches struct
 type Matches struct {
 	Matches []Match `json:"matches"`
 }
@@ -62,15 +77,7 @@ func main() {
 	fmt.Println("")
 	fmt.Println(("Matches from the API"))
 	for _, match := range matches.Matches {
-		fmt.Printf(
-			"%s - %-15s %2d - %-2d %-15s %-12s\n",
-			match.StartTime.Local().Format(time.RFC1123),
-			match.HomeTeam,
-			match.HomeTeamScore,
-			match.AwayTeamScore,
-			match.AwayTeam,
-			match.Status,
-		)
+		fmt.Println(match)
 	}
 
 	// Marshall the matches back to JSON and save it to a file
@@ -117,14 +124,6 @@ func main() {
 	fmt.Println("")
 	fmt.Println(("Matches from the file"))
 	for _, match := range matchesFromFile.Matches {
-		fmt.Printf(
-			"%s - %-15s %2d - %-2d %-15s %-12s\n",
-			match.StartTime.Local().Format(time.RFC1123),
-			match.HomeTeam,
-			match.HomeTeamScore,
-			match.AwayTeamScore,
-			match.AwayTeam,
-			match.Status,
-		)
+		fmt.Println(match)
 	}
 }
