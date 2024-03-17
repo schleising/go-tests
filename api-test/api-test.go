@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -41,9 +42,16 @@ type Matches struct {
 // Add a String method to the Matches struct
 func (m Matches) String() string {
 	var str string
+
+	// Loop through the matches and add them to the string
 	for _, match := range m.Matches {
 		str += match.String() + "\n"
 	}
+
+	// Trim the string
+	str = strings.TrimSpace(str)
+
+	// Return the string
 	return str
 }
 
