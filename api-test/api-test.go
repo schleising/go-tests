@@ -53,10 +53,7 @@ func main() {
 
 	// Unmarshal the response body into a Matches struct
 	var matches Matches
-	err = json.Unmarshal(body, &matches)
-
-	// Check for errors
-	if err != nil {
+	if err := json.Unmarshal(body, &matches); err != nil {
 		fmt.Println(err)
 		return
 	}
@@ -89,19 +86,13 @@ func main() {
 	file := "tests/matches.json"
 
 	// Create a tests directory
-	err = os.MkdirAll(filepath.Dir(file), 0755)
-
-	// Check for errors
-	if err != nil {
+	if err := os.MkdirAll(filepath.Dir(file), 0755); err != nil {
 		fmt.Println(err)
 		return
 	}
 
 	// Write the JSON to a file
-	err = os.WriteFile(file, matchesJSON, 0644)
-
-	// Check for errors
-	if err != nil {
+	if err := os.WriteFile(file, matchesJSON, 0644); err != nil {
 		fmt.Println(err)
 		return
 	}
@@ -117,10 +108,7 @@ func main() {
 
 	// Unmarshal the JSON into a Matches struct
 	var matchesFromFile Matches
-	err = json.Unmarshal(bytes, &matchesFromFile)
-
-	// Check for errors
-	if err != nil {
+	if err := json.Unmarshal(bytes, &matchesFromFile); err != nil {
 		fmt.Println(err)
 		return
 	}
