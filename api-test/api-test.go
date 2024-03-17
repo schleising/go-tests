@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -59,8 +61,74 @@ func main() {
 		return
 	}
 
-	// Print the matches
+	// Print the matches from the API
+	fmt.Println("")
+	fmt.Println(("Matches from the API"))
 	for _, match := range matches.Matches {
+		fmt.Printf(
+			"%s - %-15s %2d - %-2d %-15s %-12s\n",
+			match.StartTime.Local().Format(time.RFC1123),
+			match.HomeTeam,
+			match.HomeTeamScore,
+			match.AwayTeamScore,
+			match.AwayTeam,
+			match.Status,
+		)
+	}
+
+	// Marshall the matches back to JSON and save it to a file
+	matchesJSON, err := json.MarshalIndent(matches, "", "  ")
+
+	// Check for errors
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// Set the file path
+	file := "tests/matches.json"
+
+	// Create a tests directory
+	err = os.MkdirAll(filepath.Dir(file), 0755)
+
+	// Check for errors
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// Write the JSON to a file
+	err = os.WriteFile(file, matchesJSON, 0644)
+
+	// Check for errors
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// Read the JSON from the file
+	bytes, err := os.ReadFile(file)
+
+	// Check for errors
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// Unmarshal the JSON into a Matches struct
+	var matchesFromFile Matches
+	err = json.Unmarshal(bytes, &matchesFromFile)
+
+	// Check for errors
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// Print the matches from the file
+	fmt.Println("")
+	fmt.Println(("Matches from the file"))
+	for _, match := range matchesFromFile.Matches {
 		fmt.Printf(
 			"%s - %-15s %2d - %-2d %-15s %-12s\n",
 			match.StartTime.Local().Format(time.RFC1123),
