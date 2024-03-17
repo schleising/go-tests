@@ -15,7 +15,7 @@ func main () {
 	lines := setup(file)
 
 	// Write the lines to a file
-	writeToFile(file, lines)
+	writeToFile(file, *lines)
 
 	// Read the lines from the file
 	readFromFile(file)
@@ -90,7 +90,7 @@ func readFromFile (file string) {
 	}
 }
 
-func setup (file string) []string {
+func setup (file string) *[]string {
 	// Create the tests directory if it doesn't exist
 	err := os.MkdirAll(filepath.Dir(file), 0755)
 
@@ -210,5 +210,5 @@ func setup (file string) []string {
 		"Ut leo.",
 	}
 
-	return lines
+	return &lines
 }
