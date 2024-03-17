@@ -4,9 +4,111 @@ import (
 	"os"
 	"fmt"
 	"bufio"
+	"path/filepath"
 )
 
 func main () {
+	// Create a file in the tests directory
+	file := "tests/test.txt"
+
+	// Create a list of strings to write to a file
+	lines := setup(file)
+
+	// Write the lines to a file
+	writeToFile(file, lines)
+
+	// Read the lines from the file
+	readFromFile(file)
+}
+
+func writeToFile (file string, lines []string) {
+	// Open the file
+	f, err := os.Create(file)
+
+	// Check for errors
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	// Defer the closing of the file
+	defer f.Close()
+
+	// Create a buffer writer
+	writer := bufio.NewWriter(f)
+
+	// Write the lines to the file
+	for _, line := range lines {
+		_, err := writer.WriteString(line + "\n")
+
+		// Check for errors
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		// Print the amount of buffer space available
+		fmt.Println(writer.Available())
+	}
+
+	// Flush the buffer (not calling this will mean the last few lines are not written)
+	err = writer.Flush()
+
+	// Check for errors
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+}
+
+func readFromFile (file string) {
+	// Open the file
+	f, err := os.Open(file)
+
+	// Check for errors
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	// Defer the closing of the file
+	defer f.Close()
+
+	// Create a buffer scanner
+	scanner := bufio.NewScanner(f)
+
+	// Read the lines from the file
+	for scanner.Scan() {
+		line := scanner.Text()
+		fmt.Println(line)
+	}
+
+	// Check for errors
+	if err := scanner.Err(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+}
+
+func setup (file string) []string {
+	// Create the tests directory if it doesn't exist
+	err := os.MkdirAll(filepath.Dir(file), 0755)
+
+	// Check for errors
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	// Delete the file if it exists
+	err = os.Remove(file)
+
+	// Check for errors
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
 	// Create a list of strings to write to a file
 	lines := []string{
 		"Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
@@ -108,44 +210,5 @@ func main () {
 		"Ut leo.",
 	}
 
-	// Create a file in the tests directory
-	file := "tests/test.txt"
-
-	// Open the file
-	f, err := os.Create(file)
-
-	// Check for errors
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	// Defer the closing of the file
-	defer f.Close()
-
-	// Create a buffer writer
-	writer := bufio.NewWriter(f)
-
-	// Write the lines to the file
-	for _, line := range lines {
-		_, err := writer.WriteString(line + "\n")
-
-		// Check for errors
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-
-		// Print the amount of buffer space available
-		fmt.Println(writer.Available())
-	}
-
-	// Flush the buffer (not calling this will mean the last few lines are not written)
-	err = writer.Flush()
-
-	// Check for errors
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	return lines
 }
