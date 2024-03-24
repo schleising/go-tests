@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"mongodb-test"
 	"mongodb-test/models"
@@ -15,6 +18,8 @@ type ctxKeys string
 const (
 	user ctxKeys = "user"
 )
+
+var mongo *mongodb_test.MongoTest
 
 func main() {
 	// Create a new mux
@@ -31,6 +36,39 @@ func main() {
 
 	// Wrap the handlers with the logHandler function
 	handler := logHandler(mux)
+
+	// Error variable
+	var err error
+
+	// Create a new MongoDB test
+	mongo, err = mongodb_test.NewMongoTest()
+
+	// Check for errors
+	if err != nil {
+		fmt.Println("Error connecting to MongoDB:", err)
+		return
+	}
+
+	// Create a new channel
+	c := make(chan os.Signal, 1)
+
+	// Notify the channel of the following signals
+	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
+
+	// Create a goroutine to listen for signals
+	go func() {
+		// Wait for a signal
+		sig := <-c
+
+		// Print the signal
+		fmt.Println("Received signal:", sig)
+
+		// Close the MongoDB connection
+		mongo.Close()
+
+		// Exit the program
+		os.Exit(0)
+	}()
 
 	// Listen and serve on port 8080
 	http.ListenAndServe(":8080", handler)
@@ -127,17 +165,6 @@ func apiHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func getMatches() (models.MatchList, error) {
-	// Create a new MongoDB test
-	mongo, err := mongodb_test.NewMongoTest()
-
-	// Check for errors
-	if err != nil {
-		return models.MatchList{}, err
-	}
-	
-	// Defer the close
-	defer mongo.Close()
-
 	// Get the matches
 	matches, err := mongo.GetAllTeamMatches("Liverpool")
 

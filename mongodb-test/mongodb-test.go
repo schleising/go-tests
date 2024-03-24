@@ -14,8 +14,6 @@ import (
 )
 
 type MongoTest struct {
-	ctx context.Context
-	cancel context.CancelFunc
 	client *mongo.Client
 	database *mongo.Database
 	collection *mongo.Collection
@@ -31,15 +29,13 @@ func NewMongoTest() (*MongoTest, error) {
 
 	// Connect to MongoDB
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://macmini2:27017"))
 
 	// Check for errors
 	if err != nil {
 		// Log the error
 		logger.Printf("Error connecting to MongoDB: %v", err)
-
-		// Cancel the context
-		cancel()
 
 		// Return an error
 		return nil, err
@@ -52,9 +48,6 @@ func NewMongoTest() (*MongoTest, error) {
 	if err != nil {
 		// Log the error
 		logger.Printf("Error pinging MongoDB: %v", err)
-
-		// Cancel the context
-		cancel()
 
 		// Return an error
 		return nil, err
@@ -71,8 +64,6 @@ func NewMongoTest() (*MongoTest, error) {
 
 	// Create a new MongoTest struct
 	m := &MongoTest{
-		ctx: ctx,
-		cancel: cancel,
 		client: client,
 		database: database,
 		collection: collection,
@@ -84,8 +75,12 @@ func NewMongoTest() (*MongoTest, error) {
 }
 
 func (m *MongoTest) Close() {
+	// Create a context
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
 	// Disconnect from MongoDB
-	err := m.client.Disconnect(m.ctx)
+	err := m.client.Disconnect(ctx)
 
 	// Check for errors
 	if err != nil {
@@ -94,16 +89,17 @@ func (m *MongoTest) Close() {
 
 	// Log success
 	m.logger.Println("Disconnected from MongoDB")
-
-	// Cancel the context
-	m.cancel()
 }
 
 func (m *MongoTest) GetOneMatch(homeTeam, awayTeam string) (models.Match, error) {
+	// Create a context
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
 	// Get the document that has homeTeam as the home team and awayTeam as the away team
 	var result models.Match
 	err := m.collection.FindOne(
-		m.ctx,
+		ctx,
 		bson.D{
 			{Key: "home_team.short_name", Value: homeTeam},
 			{Key: "away_team.short_name", Value: awayTeam},
@@ -121,9 +117,13 @@ func (m *MongoTest) GetOneMatch(homeTeam, awayTeam string) (models.Match, error)
 }
 
 func (m *MongoTest) GetAllTeamMatches(team string) (models.MatchList, error) {
+	// Create a context
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
 	// Get all documents that have `team` as the home team or away team
 	cursor, err := m.collection.Find(
-		m.ctx,
+		ctx,
 		bson.D{
 			{Key: "$or", Value: bson.A{
 				bson.D{{Key: "home_team.short_name", Value: team}},
@@ -142,13 +142,13 @@ func (m *MongoTest) GetAllTeamMatches(team string) (models.MatchList, error) {
 	}
 
 	// Close the cursor when the function returns
-	defer cursor.Close(m.ctx)
+	defer cursor.Close(ctx)
 
 	// Create a MatchList
 	var matchList models.MatchList
 
 	// Iterate through the cursor
-	for cursor.Next(m.ctx) {
+	for cursor.Next(ctx) {
 		// Decode the document
 		var result models.Match
 		err := cursor.Decode(&result)
