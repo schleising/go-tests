@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -54,16 +55,102 @@ func (m Matches) String() string {
 	return str
 }
 
+type ctxKeys string
+
+const (
+	user ctxKeys = "user"
+)
+
 func main() {
-	// Create a new server
-	http.Handle("/api", http.HandlerFunc(handler))
+	// Create a new mux
+	mux := http.NewServeMux()
+
+	// Handle the root route
+	mux.Handle("/", http.HandlerFunc(rootHandler))
+
+	// Handle the /api/ route
+	mux.Handle("/api/", http.HandlerFunc(apiHandler))
+
+	// Handle the /api/go/ route
+	mux.Handle("/api/go/", http.HandlerFunc(goHandler))
+
+	// Wrap the handlers with the logHandler function
+	handler := logHandler(mux)
+
+	// Redirect all requests without a trailing slash to one with a trailing slash
+	// mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	//     http.Redirect(w, r, r.URL.Path+"/", http.StatusMovedPermanently)
+	// })
 
 	// Listen and serve on port 8080
-	http.ListenAndServe(":8080", nil)
+	http.ListenAndServe(":8080", handler)
 }
 
-func handler(w http.ResponseWriter, req *http.Request) {
-	fmt.Printf("%s %s %s\n", req.Method, req.URL.Path, req.Proto)
+// Function to wrap the handlers and print the function name, request method, URL path, and protocol
+func logHandler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		// Print the calling function name, request method, URL path, and protocol
+		fmt.Printf("%s %s %s\n", req.Method, req.URL.Path, req.Proto)
+
+		// Add some data to the request context
+		ctx := req.Context()
+		ctx = context.WithValue(ctx, user, "steve")
+		req = req.WithContext(ctx)
+
+		// Call the next handler
+		next.ServeHTTP(w, req)
+
+		// Write the function name, request method, URL path, and protocol to the response
+		fmt.Fprintf(w, "Request: %s %s %s\n", req.Method, req.URL.Path, req.Proto)
+
+		// Print the query string
+		query := req.URL.Query()
+
+		// Print the query string
+		if len(query) == 0 {
+			fmt.Println("No query string")
+		} else {
+			fmt.Println("Query string:")
+		}
+
+		// Loop through the query string
+		for key, value := range query {
+			fmt.Printf("%s\n", key)
+			for _, v := range value {
+				fmt.Printf("  %s\n", v)
+			}
+		}
+	})
+}
+
+func rootHandler(w http.ResponseWriter, req *http.Request) {
+	// Write the response
+	fmt.Println("Root handler")
+
+	// Print the data from the request context
+	ctx := req.Context()
+	value := ctx.Value(user)
+	fmt.Println("User:", value)
+}
+
+func goHandler(w http.ResponseWriter, req *http.Request) {
+	// Write the response
+	fmt.Println("Go handler")
+
+	// Print the data from the request context
+	ctx := req.Context()
+	value := ctx.Value(user)
+	fmt.Println("User:", value)
+}
+
+func apiHandler(w http.ResponseWriter, req *http.Request) {
+	// Check that the request is for the /api/ route
+	if req.URL.Path != "/api/" {
+		http.NotFound(w, req)
+		return
+	}
+
+	fmt.Println("API handler")
 	// Get the matches
 	matches, err := getMatches()
 
