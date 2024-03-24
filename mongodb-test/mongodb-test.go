@@ -96,7 +96,7 @@ func getAllTeamMatches(ctx context.Context, collection *mongo.Collection, team s
 		logger.Fatalf("Error getting documents: %v", err)
 	}
 
-	// Iterate through the cursor
+	// Close the cursor when the function returns
 	defer cursor.Close(ctx)
 
 	// Create a MatchList
