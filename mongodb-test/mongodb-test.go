@@ -50,13 +50,13 @@ func main() {
 	match := getOneMatch(ctx, collection, "Liverpool", "Man City")
 
 	// Log the match
-	logger.Printf("%v", match)
+	logger.Println(match)
 
 	// Get all Liverpool matches
 	matches := getAllTeamMatches(ctx, collection, "Liverpool")
 
 	// Log the matches
-	logger.Printf("%v", matches)
+	logger.Println(matches)
 }
 
 func getOneMatch(ctx context.Context, collection *mongo.Collection, homeTeam, awayTeam string) models.Match {
