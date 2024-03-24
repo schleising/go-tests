@@ -60,7 +60,7 @@ func main() {
 }
 
 func getOneMatch(ctx context.Context, collection *mongo.Collection, homeTeam, awayTeam string) models.Match {
-	// Get the document that has Liverpool as the home team and Manchester City as the away team
+	// Get the document that has homeTeam as the home team and awayTeam as the away team
 	var result models.Match
 	err := collection.FindOne(
 		ctx,
@@ -80,7 +80,7 @@ func getOneMatch(ctx context.Context, collection *mongo.Collection, homeTeam, aw
 }
 
 func getAllTeamMatches(ctx context.Context, collection *mongo.Collection, team string) models.MatchList {
-	// Get all documents that have Liverpool as the home team or Manchester City as the away team
+	// Get all documents that have `team` as the home team or away team
 	cursor, err := collection.Find(
 		ctx,
 		bson.D{
