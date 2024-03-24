@@ -132,7 +132,8 @@ type Match struct {
 
 func (m Match) String() string {
 	return fmt.Sprintf(
-		"%v %14v %v - %v %-14v %v",
+		"%v %v %14v %v - %v %-14v %v",
+		m.UtcDate.Local().Weekday().String()[:3],
 		m.UtcDate.Local().Format(time.RFC822),
 		m.HomeTeam,
 		m.Score.FullTime.Home,
