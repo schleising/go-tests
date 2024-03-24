@@ -7,7 +7,7 @@
     <h1>Today's Matches</h1>
     {{range .Matches}}
       <div class="match">
-        <h2>{{.HomeTeam}} {{.HomeTeamScore}} - {{.AwayTeamScore}} {{.AwayTeam}} - {{.Status}}</h2>
+        <h2>{{.HomeTeam}} {{.Score.FullTime.Home}} - {{.Score.FullTime.Away}} {{.AwayTeam}} - {{.Status}}</h2>
       </div>
     {{end}}
   </body>
