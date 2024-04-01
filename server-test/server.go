@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -62,7 +63,7 @@ func main() {
 	// Create a goroutine to listen for signals
 	go func() {
 		// Start the server
-		if err := server.ListenAndServe(); err != http.ErrServerClosed {
+		if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 			fmt.Println("Server Error:", err)
 		}
 
