@@ -46,8 +46,35 @@ func (t *ToTerminal) Output(output string) error {
 	return nil
 }
 
-func doOutput(o Outputter, output string) {
-	o.Output(output)
+type OutputFloat float64
+
+func (f OutputFloat) Output(output string) error {
+	fmt.Println("Outputting to float", f)
+	fmt.Println(output)
+	
+	return nil
+}
+
+type OutputInt int
+
+func (i OutputInt) Output(output string) error {
+	fmt.Println("Outputting to int", i)
+	fmt.Println(output)
+	
+	return nil
+}
+
+func doOutput(o Outputter, output string) error {
+	// Print the type of the outputter
+	fmt.Printf("Outputter type: %T\n", o)
+	err := o.Output(output)
+
+	if err != nil {
+		fmt.Println("Error outputting:", err)
+		return err
+	}
+
+	return nil
 }
 
 func main() {
@@ -58,4 +85,10 @@ func main() {
 
 	output = &ToTerminal{}
 	doOutput(output, "This is a terminal test")
+
+	output = OutputFloat(3.14)
+	doOutput(output, "This is a float test")
+
+	output = OutputInt(42)
+	doOutput(output, "This is an int test")
 }
