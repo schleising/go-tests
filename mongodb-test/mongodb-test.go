@@ -169,3 +169,63 @@ func (m *MongoTest) GetAllTeamMatches(team string) (models.MatchList, error) {
 	// Return the matchList
 	return matchList, nil
 }
+
+func (m *MongoTest) GetTodaysMatches() (models.MatchList, error) {
+	// Create a context
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	// Get the start of today
+	start_date := time.Now().Truncate(24 * time.Hour)
+
+	// Get the end of today
+	end_date := start_date.Add(24 * time.Hour)
+	
+	// Get all documents between start_date and end_date
+	cursor, err := m.collection.Find(
+		ctx,
+		bson.D{
+			{Key: "utc_date", Value: bson.D{
+				{Key: "$gte", Value: start_date},
+				{Key: "$lt", Value: end_date},
+			}},
+		},
+	)
+
+	// Check for errors
+	if err != nil {
+		// Log the error
+		m.logger.Printf("Error getting all documents: %v", err)
+
+		// Return an empty MatchList and the error
+		return models.MatchList{}, err
+	}
+
+	// Close the cursor when the function returns
+	defer cursor.Close(ctx)
+
+	// Create a MatchList
+	var matchList models.MatchList
+
+	// Iterate through the cursor
+	for cursor.Next(ctx) {
+		// Decode the document
+		var result models.Match
+		err := cursor.Decode(&result)
+
+		// Check for errors
+		if err != nil {
+			// Log the error
+			m.logger.Printf("Error decoding document: %v", err)
+
+			// Return an empty MatchList and the error
+			return models.MatchList{}, err
+		}
+
+		// Append the result to the matchList
+		matchList.Matches = append(matchList.Matches, result)
+	}
+
+	// Return the matchList
+	return matchList, nil
+}
