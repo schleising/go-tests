@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"mongodb-test"
 	"mongodb-test/models"
@@ -37,7 +38,13 @@ func main() {
 	// Wrap the handlers with the logHandler function
 	handler := logHandler(mux)
 
-	// Error variable
+	// Create a new server
+	server := http.Server{
+		Addr:    ":8080",
+		Handler: handler,
+	}
+
+	// Creare an error variable
 	var err error
 
 	// Create a new MongoDB test
@@ -49,29 +56,43 @@ func main() {
 		return
 	}
 
+	// Close the MongoDB connection
+	defer mongo.Close()
+
+	// Create a goroutine to listen for signals
+	go func() {
+		// Start the server
+		if err := server.ListenAndServe(); err != http.ErrServerClosed {
+			fmt.Println("Server Error:", err)
+		}
+
+		// Print that the server has stopped
+		fmt.Println("Server stopped listening")
+	}()
+
 	// Create a new channel
 	c := make(chan os.Signal, 1)
 
 	// Notify the channel of the following signals
 	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 
-	// Create a goroutine to listen for signals
-	go func() {
-		// Wait for a signal
-		sig := <-c
+	// Wait for a signal
+	sig := <-c
 
-		// Print the signal
-		fmt.Println("Received signal:", sig)
+	// Print the signal
+	fmt.Println("Received Signal:", sig)
 
-		// Close the MongoDB connection
-		mongo.Close()
+	// Create a context
+	ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
+	defer cancel()
 
-		// Exit the program
-		os.Exit(0)
-	}()
+	// Shutdown the server
+	if err := server.Shutdown(ctx); err != nil {
+		fmt.Println("Error shutting down server:", err)
+	}
 
-	// Listen and serve on port 8080
-	http.ListenAndServe(":8080", handler)
+	// Print that the server has stopped
+	fmt.Println("Server stopped gracefully")
 }
 
 // Function to wrap the handlers and print the function name, request method, URL path, and protocol
