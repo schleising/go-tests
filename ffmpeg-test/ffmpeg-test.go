@@ -216,7 +216,7 @@ type Ffmpeg struct {
 	startTime time.Time
 
 	// Progress channel
-	Progress chan *Progress
+	Progress chan Progress
 }
 
 func NewFfmpeg(inputFile string, outputFile string, command []string) (*Ffmpeg, error) {
@@ -250,7 +250,7 @@ func NewFfmpeg(inputFile string, outputFile string, command []string) (*Ffmpeg, 
 	cmd := exec.Command("ffmpeg", options...)
 
 	// Create a channel to send the progress
-	progressChannel := make(chan *Progress)
+	progressChannel := make(chan Progress)
 
 	// Get the input fiel details with ffprobe
 	ffprobe := exec.Command(
@@ -349,7 +349,7 @@ func (f *Ffmpeg) Start() error {
 			}
 
 			// Send the progress to the channel
-			f.Progress <- progress
+			f.Progress <- *progress
 		}
 	}()
 
