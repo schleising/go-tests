@@ -17,37 +17,37 @@ import (
 // Progress struct to parse and store the progress of the ffmpeg command
 type Progress struct {
 	// Frame number
-	Frame               int
+	Frame int
 
 	// Frames per second
-	FPS                 float64
+	FPS float64
 
 	// Q value
-	Q                   float64
+	Q float64
 
 	// Size of the output file
-	Size                float64
+	Size float64
 
 	// Time through the file
-	Time                time.Duration
+	Time time.Duration
 
 	// Bitrate
-	Bitrate             float64
+	Bitrate float64
 
 	// Duplicate frame count
-	Dup                 int
+	Dup int
 
 	// Dropped frame count
-	Drop                int
+	Drop int
 
 	// Conversion speed
-	Speed               float64
+	Speed float64
 
 	// Percent complete
-	PercentComplete     float64
+	PercentComplete float64
 
 	// Time remaining
-	TimeRemaining       time.Duration
+	TimeRemaining time.Duration
 
 	// Estimated finish time
 	EstimatedFinishTime time.Time
@@ -192,6 +192,12 @@ func (p *Progress) String() string {
 }
 
 type Ffmpeg struct {
+	// The input file
+	inputFile string
+
+	// The output file
+	outputFile string
+
 	// Ffmpeg command to run
 	command *exec.Cmd
 
@@ -292,10 +298,12 @@ func NewFfmpeg(inputFile string, outputFile string, command []string) (*Ffmpeg, 
 
 	// Create the ffmpeg struct
 	ffmpeg := &Ffmpeg{
-		command:   cmd,
-		duration:  duration,
-		startTime: time.Now(),
-		Progress:  progressChannel,
+		inputFile:  inputFile,
+		outputFile: outputFile,
+		command:    cmd,
+		duration:   duration,
+		startTime:  time.Now(),
+		Progress:   progressChannel,
 	}
 
 	// Return the ffmpeg struct
