@@ -195,7 +195,7 @@ func newProgress(line string, duration time.Duration, startTime time.Time, input
 }
 
 // String method for the Progress struct
-func (p *Progress) String() string {
+func (p Progress) String() string {
 	return strconv.FormatFloat(p.PercentComplete, 'f', 2, 64) + "% Complete - " + "Time Remaining: " + p.TimeRemaining.Truncate(time.Second).String() + " - Estimated Finish Time: " + p.EstimatedFinishTime.Format(time.TimeOnly)
 }
 
