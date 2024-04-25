@@ -16,6 +16,12 @@ import (
 
 // Progress struct to parse and store the progress of the ffmpeg command
 type Progress struct {
+	// The input file
+	InputFile string
+
+	// The output file
+	OutputFile string
+
 	// Frame number
 	Frame int
 
@@ -67,7 +73,7 @@ const (
 )
 
 // Parse the progress information from the ffmpeg stderr output
-func newProgress(line string, duration time.Duration, startTime time.Time) (*Progress, error) {
+func newProgress(line string, duration time.Duration, startTime time.Time, inputFile string, outputFile string) (*Progress, error) {
 	// Check if the line contains progress information
 	if !strings.HasPrefix(line, "frame=") {
 		return nil, errors.New("line does not contain progress information")
@@ -171,6 +177,8 @@ func newProgress(line string, duration time.Duration, startTime time.Time) (*Pro
 
 	// Return the progress struct
 	return &Progress{
+		InputFile:           inputFile,
+		OutputFile:          outputFile,
 		Frame:               frame,
 		FPS:                 fps,
 		Q:                   q,
@@ -335,7 +343,7 @@ func (f *Ffmpeg) Start() error {
 			}
 
 			// Log the output
-			progress, err := newProgress(line, f.duration, f.startTime)
+			progress, err := newProgress(line, f.duration, f.startTime, f.inputFile, f.outputFile)
 			if err != nil {
 				continue
 			}
