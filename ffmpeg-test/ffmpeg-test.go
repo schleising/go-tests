@@ -348,8 +348,8 @@ func (f *Ffmpeg) Start() error {
 
 func main() {
 	ffmpeg, err := NewFfmpeg(
-		"/Users/steve/Downloads/Black Panther Wakanda Forever 2022 Bluray-1080p.mp4",
-		"/Users/steve/Downloads/Converted/Black Panther Wakanda Forever 2022 Bluray-1080p.mp4",
+		"/Users/steve/Downloads/Test1.mp4",
+		"/Users/steve/Downloads/Converted/Test1.mp4",
 		[]string{
 			"-c:v",
 			"libx264",
