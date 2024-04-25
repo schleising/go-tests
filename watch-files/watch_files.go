@@ -14,17 +14,8 @@ func main() {
 	// Create a new Watcher
 	w := watcher.New()
 
-	// Get the user's home directory
-	home, err := os.UserHomeDir()
-
-	// Check for errors
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
 	// Set the watcher directory to ~/Downloads
-	watchedFolder := home + "/Downloads"
+	watchedFolder := "/watch-files/tests"
 
 	// Add a new path to the watcher, non-recursively, watching all events.
 	if err := w.AddRecursive(watchedFolder); err != nil {
