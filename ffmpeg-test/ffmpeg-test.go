@@ -364,8 +364,8 @@ func (f *Ffmpeg) Start() error {
 
 func main() {
 	ffmpeg, err := NewFfmpeg(
-		"/Users/steve/Downloads/Test1.mp4",
-		"/Users/steve/Downloads/Converted/Test1.mp4",
+		"/Users/steve/Downloads/TestInput.mp4",
+		"/Users/steve/Downloads/Converted/TestOutput.mp4",
 		[]string{
 			"-c:v",
 			"libx264",
@@ -395,4 +395,6 @@ func main() {
 		log.Println(err)
 		os.Exit(1)
 	}
+
+	time.Sleep(2 * time.Second)
 }
