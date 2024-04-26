@@ -2,14 +2,17 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"errors"
 	"log"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 	"unicode"
 )
@@ -217,9 +220,18 @@ type Ffmpeg struct {
 
 	// Progress channel
 	Progress chan Progress
+
+	// Error channel
+	Error chan error
+
+	// Done channel
+	Done chan bool
+
+	// Cancel Context
+	context context.Context
 }
 
-func NewFfmpeg(inputFile string, outputFile string, command []string) (*Ffmpeg, error) {
+func NewFfmpeg(cancelContext context.Context, inputFile string, outputFile string, command []string) (*Ffmpeg, error) {
 	// Check if the input file exists
 	_, err := os.Stat(inputFile)
 	if os.IsNotExist(err) {
@@ -247,10 +259,16 @@ func NewFfmpeg(inputFile string, outputFile string, command []string) (*Ffmpeg, 
 	options = append(options, outputFile)
 
 	// Create a subprocess to run ffmpeg
-	cmd := exec.Command("ffmpeg", options...)
+	cmd := exec.CommandContext(cancelContext, "ffmpeg", options...)
 
 	// Create a channel to send the progress
 	progressChannel := make(chan Progress)
+
+	// Create a channel to send errors
+	errorChannel := make(chan error)
+
+	// Create a channel to send done signal
+	doneChannel := make(chan bool)
 
 	// Get the input fiel details with ffprobe
 	ffprobe := exec.Command(
@@ -312,10 +330,34 @@ func NewFfmpeg(inputFile string, outputFile string, command []string) (*Ffmpeg, 
 		duration:   duration,
 		startTime:  time.Now(),
 		Progress:   progressChannel,
+		Error:      errorChannel,
+		Done:       doneChannel,
+		context:    cancelContext,
 	}
 
 	// Return the ffmpeg struct
 	return ffmpeg, nil
+}
+
+func (f *Ffmpeg) cleanUp() {
+	// Close the progress channel
+	close(f.Progress)
+
+	// If the context was cancelled, delete the output file
+	select {
+	case <-f.context.Done():
+		os.Remove(f.outputFile)
+	default:
+	}
+
+	// Close the error channel
+	close(f.Error)
+
+	// Signal that the ffmpeg command is done
+	f.Done <- false
+
+	// Close the done channel
+	close(f.Done)
 }
 
 func (f *Ffmpeg) Start() error {
@@ -339,12 +381,20 @@ func (f *Ffmpeg) Start() error {
 		for {
 			line, err := stdErrScanner.ReadString('\r')
 			if err != nil {
-				break
+				// Cancel the ffmpeg command
+				f.cleanUp()
+
+				// Return
+				return
 			}
 
 			// Log the output
 			progress, err := newProgress(line, f.duration, f.startTime, f.inputFile, f.outputFile)
 			if err != nil {
+				// Send an error to the error channel
+				f.Error <- err
+
+				// Continue to the next iteration
 				continue
 			}
 
@@ -363,7 +413,36 @@ func (f *Ffmpeg) Start() error {
 }
 
 func main() {
+	// Create a new logger
+	var logger = log.New(os.Stdout, "ffmpeg-test: ", log.LstdFlags|log.Lshortfile)
+
+	// Create a new context with a cancel function
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 3*time.Second)
+
+	// Defer cancelling the context
+	defer cancelFunc()
+
+	// Create a channel to listen for signals
+	c := make(chan os.Signal, 1)
+
+	// Notify the channel of the following signals
+	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
+
+	// Create a goroutine to listen for signals
+	go func() {
+		// Wait for a signal
+		sig := <-c
+
+		// Print the signal
+		logger.Println("Received Signal:", sig)
+
+		// Cancel the context
+		cancelFunc()
+	}()
+
+	// Create a new ffmpeg command
 	ffmpeg, err := NewFfmpeg(
+		ctx,
 		"/Users/steve/Downloads/TestInput.mp4",
 		"/Users/steve/Downloads/Converted/TestOutput.mp4",
 		[]string{
@@ -377,24 +456,46 @@ func main() {
 	)
 
 	if err != nil {
-		log.Println("Error:")
-		log.Println(err)
+		logger.Println("Error:")
+		logger.Println(err)
 		os.Exit(1)
 	}
 
 	go func() {
-		for progress := range ffmpeg.Progress {
-			log.Println(progress)
+		for {
+			select {
+			case progress, ok := <-ffmpeg.Progress:
+				if !ok {
+					logger.Println("Progress channel closed")
+					return
+				} else {
+					logger.Println(progress)
+				}
+			case err, ok := <-ffmpeg.Error:
+				if !ok {
+					logger.Println("Error channel closed")
+					return
+				} else {
+					logger.Println("Error:", err)
+				}
+			}
 		}
 	}()
 
 	err = ffmpeg.Start()
 
 	if err != nil {
-		log.Println("Error:")
-		log.Println(err)
-		os.Exit(1)
+		logger.Println("Error:", err)
 	}
 
-	time.Sleep(2 * time.Second)
+	// Wait for the ffmpeg command to finish
+	finished, ok := <-ffmpeg.Done
+
+	if !ok {
+		logger.Println("Done channel closed")
+	}
+
+	if finished {
+		logger.Println("Ffmpeg command finished")
+	}
 }
